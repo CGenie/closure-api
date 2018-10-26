@@ -10,4 +10,8 @@
                  [clj-http "3.9.1"]
                  [javax.servlet/servlet-api "2.5"]
                  [http-kit "2.2.0"]
+                 [digest "1.4.8"]
+                 [honeysql "0.9.4"]
+                 [org.clojure/java.jdbc "0.7.8"]
+                 [org.xerial/sqlite-jdbc "3.25.2"]
                  [compojure "1.6.1"]])

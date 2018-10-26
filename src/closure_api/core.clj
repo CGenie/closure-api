@@ -2,15 +2,14 @@
   (:require [clj-http.client :as http]
             [org.httpkit.server :as server]
             [environ.core :refer [env]])
-  (:use [closure-api.compiler :only [js-compile]]
+  (:use [closure-api.compiler-cache :only [js-compile-cached]]
         [ring.middleware.params :only [wrap-params]]))
-        ;; [ring.adapter.jetty :as jetty]))
 
 ; Useful read: https://exupero.org/hazard/post/clojure-proxy/
 
-; TODO fetch from env
+; NOTE fetch from env
 (def default-host (env :default-host))  ;"http://odoo:8069"
-(def default-compileoff (env :default-compileoff))
+(def default-passthru (env :default-passthru))
 
 (defn build-url [host path query-string]
   (let [url (.toString (java.net.URL. (java.net.URL. host) path))]
@@ -18,26 +17,30 @@
       (str url "?" query-string)
       url)))
 
+(defn build-url-from-req [req]
+  (let [{:keys [host uri query-string]
+         :or {host default-host}} req]
+    (build-url host uri query-string)))
+
 ; The middleware that we will use
 (defn proxy-handler [req]
-  (let [{:keys [host uri query-string request-method body headers]
-         :or {host default-host}} req]
-    (->
-     (http/request {:url (build-url host uri query-string)
-                    :method request-method
-                    :body body
-                    :headers (dissoc headers "content-length")
-                    :throw-exceptions false
-                    :decompress-body false}))))
-                    ;:as :stream}))))
+  (let [{:keys [request-method body headers]} req]
+    (http/request {:url (build-url-from-req req)
+                   :method request-method
+                   :body body
+                   :headers (dissoc headers "content-length")
+                   :throw-exceptions false
+                   :decompress-body false})))
+                                        ;:as :stream}))))
 
 (defn wrap-compile [handler]
   (fn [req]
     (let [res (handler req)
           uri (:uri req)
           params (:params req)
-          compile-off (or (params "_compileoff") default-compileoff)
+          compile-off (or (params "_passthru") default-passthru)
           status (:status res)]
+      (println "res-headers" (:headers res))
       (println "params " params)
       (println "compile-off " compile-off)
       (println "uri " uri)
@@ -49,7 +52,9 @@
         (println "do-compile " do-compile)
         (if do-compile
           (let [body (:body res)
-                compiled-code (js-compile body)]
+                url (build-url-from-req req)
+                ;compiled-code (js-compile body)]
+                compiled-code (js-compile-cached url body)]
             (-> res
                 (assoc :body compiled-code)))
           res)))))

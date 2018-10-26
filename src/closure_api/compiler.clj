@@ -3,7 +3,8 @@
         [compojure.core :only [defroutes GET POST DELETE ANY context]]
         org.httpkit.server
         [org.httpkit.client :as http]
-        [ring.util.response :as r]))
+        [ring.util.response :as r])
+  (:require digest))
 
 ; TODO - turn off warnings report
 (defn js-compile
