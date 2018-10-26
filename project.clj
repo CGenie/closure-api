@@ -1,4 +1,4 @@
-(defproject closure-api "0.1.0-SNAPSHOT"
+(defproject closure-api "0.1.0"
   :description "A proxy server which transparently compiles JS files using the Closure Compiler."
   :main closure-api.core
   :url "http://example.com/FIXME"

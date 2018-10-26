@@ -2,6 +2,8 @@
 
 A Closure Ring server that acts as a transparent Google Closure compiler.
 
+You can access the Docker image of this repository [here]().
+
 ## Usage
 
 Set your nginx like this:
